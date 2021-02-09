@@ -2,6 +2,7 @@ import copy
 import sys
 import math
 import random
+import getopt
 
 global num_nodes_visited
 global backtracks
@@ -106,7 +107,7 @@ class DFS_State():
         if number_variables_left == 0:
             return True
         
-        #Some variable has no possible assignment (In place backjumping)
+        #Some variable has no possible assignment (Forward Pruning)
         for variable in self.variables_left:
             if not self.colors[variable]:
                 return False
@@ -282,7 +283,7 @@ class DFS_State():
         return self.Lookahead_n(node, 4)
 
     def Regular_DFS_Search(self):
-        if self.Search(1, self.DFS_Variable_Heuristic, self.DFS_Value_Heuristic, math.inf, 1, math.inf):
+        if self.Search(self.DFS_Variable_Heuristic(), self.DFS_Variable_Heuristic, self.DFS_Value_Heuristic, math.inf, 1, math.inf):
             return self.finish_search()
         return False
 
@@ -297,17 +298,21 @@ class DFS_State():
     def Depth_Bounded_Discrepancy_Search(self):
         return self.DDS_Search(self.Least_Color_Choices_Variable_Heuristic, self.Induced_Conflicts_Value_Heuristic, discrepancy_bound=5)
 
+#self.colors[node] is the color of the node
+#self.nodes[color] is a list of nodes that the given color has
+#self.max_color is the currently largest numbered color
 class Local_Search_State():
-    def __init__(self, graph):
+    def __init__(self, graph, num_colors):
         self.graph = graph
         self.colors = {}
         self.nodes = {}
+        self.num_colors = num_colors
         #Initialize Graph with each node being a different color
         for variable in range(1, self.graph.num_nodes + 1):
             self.colors[variable] = variable
-            self.nodes[variable] = variable
+            self.nodes[variable] = [variable]
             self.max_color = self.graph.num_nodes
-
+    #Resets colors chosen 
     def reset_state(self):
         for variable in range(1, self.graph.num_nodes + 1):
             self.colors[variable] = variable
@@ -320,7 +325,6 @@ class Local_Search_State():
             return True
         resets = 0
         while True:
-            self.reset_state()
             for iteration_number in range(iterations):
                 variable = variable_heuristic()
                 value = value_heuristic(variable)
@@ -382,8 +386,8 @@ class Local_Search_State():
                 if len(self.nodes[color]) == max_color:
                     return color
 
-    def Search(self, num_colors):
-        return self.Local_Search(num_colors, 100000, self.pick_variable, self.pick_value)
+    def Search(self):
+        return self.Local_Search(self.num_colors, 100000, self.pick_variable, self.pick_value)
 
 def main():
     sys.setrecursionlimit(2000)
@@ -391,10 +395,35 @@ def main():
     global backtracks
     num_nodes_visited = 0
     backtracks = 0
-    graph = Graph(sys.argv[1])
-    #state = DFS_State(graph, int(sys.argv[2]))
-    state = Local_Search_State(graph)
-    success = state.Search(int(sys.argv[2]))
+    state = None
+    search = None
+
+    options, args = getopt.getopt(sys.argv[1:], "", ["DFS", "Heuristic", "LDS", "DDS", "Local"])
+    if len(args) != 2:
+        print('Usage: ', sys.argv[0], ' [-options][graph_file][n]')
+        sys.exit()
+    
+    graph = Graph(args[0])
+    number_colors = int(args[1])
+
+    for opt, _ in options:
+        if opt == '--DFS':
+            state = DFS_State(graph, number_colors)
+            search = state.Regular_DFS_Search
+        elif opt == '--Heuristic':
+            state = DFS_State(graph, number_colors)
+            search = state.Heuristic_DFS_Search
+        elif opt == '--LDS':
+            state = DFS_State(graph, number_colors)
+            search = state.Limited_Discrepancy_Search
+        elif opt == '--DDS':
+            state = DFS_State(graph, number_colors)
+            search = state.Depth_Bounded_Discrepancy_Search
+        elif opt == '--Local':
+            state = Local_Search_State(graph, number_colors)
+            search = state.Search
+
+    success = search()
     if not success:
         print('No such coloring found with ' + sys.argv[2] + ' colors')
     elif isinstance(state, Local_Search_State):
@@ -409,9 +438,9 @@ def main():
             for value in state.values[color]:
                 print(value, end=' ')
             print()
-    print()
-    #print('Variables Visited: ', num_nodes_visited)
-    #print('Number of Backtracks: ', backtracks)
+        print()
+        print('Variables Visited: ', num_nodes_visited)
+        print('Number of Backtracks: ', backtracks)
 
 if __name__ == '__main__':
     main()
