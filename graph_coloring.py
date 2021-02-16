@@ -3,7 +3,7 @@ import sys
 import math
 import random
 import getopt
-
+i = 1
 global num_nodes_visited
 global backtracks
 #For each node in the graph self.neighbors[node] is a list of the neighbors of that node
