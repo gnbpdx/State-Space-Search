@@ -3,7 +3,7 @@ import sys
 import math
 import random
 import getopt
-i = 1
+
 global num_nodes_visited
 global backtracks
 #For each node in the graph self.neighbors[node] is a list of the neighbors of that node
@@ -371,6 +371,25 @@ class Local_Search_State():
                 if len(self.nodes[color]) == min_color:
                     return self.nodes[color][0]
 
+    def pick_neighbor_variable(self):
+        choice = random.randint(0, 2)
+        num_nodes_with_color = {color: len(self.nodes[color]) for color in self.nodes}
+        if choice == 0:
+            neighbor_colors = {node : len(set([self.colors[neighbor] for neighbor in self.graph.neighbors[node]])) for node in self.colors}
+            max_length = max([neighbor_colors[node] for node in self.colors])
+            for node in self.colors:
+                if neighbor_colors[node] == max_length:
+                    return node
+            
+        elif choice == 1:
+            min_color = min([num_nodes_with_color[color] for color in num_nodes_with_color])
+            for color in self.nodes:
+                if len(self.nodes[color]) == min_color:
+                    return self.nodes[color][0]
+        else:
+            node_heuristic = [1 / num_nodes_with_color[self.colors[node]] for node in self.colors]
+            return random.choices([color for color in self.colors], weights = node_heuristic)[0]
+
     def pick_value(self, node):
         choice = random.randint(0,1)
         neighbor_colors = {self.colors[neighbor] for neighbor in self.graph.neighbors[node]}
@@ -378,8 +397,9 @@ class Local_Search_State():
         value_heuristic = [num_nodes_with_color[color] for color in num_nodes_with_color]
         if not value_heuristic:
             return None
-        if choice == 0:
+        if choice != 0:
             return random.choices([color for color in num_nodes_with_color], weights = value_heuristic)[0]
+
         else:
             max_color = max([num_nodes_with_color[color] for color in num_nodes_with_color])
             for color in self.nodes:
@@ -387,7 +407,7 @@ class Local_Search_State():
                     return color
 
     def Search(self):
-        return self.Local_Search(self.num_colors, 100000, self.pick_variable, self.pick_value)
+        return self.Local_Search(self.num_colors, 100000, self.pick_neighbor_variable, self.pick_value)
 
 def main():
     sys.setrecursionlimit(2000)
