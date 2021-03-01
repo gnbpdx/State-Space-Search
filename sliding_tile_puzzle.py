@@ -102,6 +102,7 @@ class Puzzle():
             self.puzzle[self.empty] = self.puzzle[(i+1) * self.dimensions + j]
             self.puzzle[(i+1) * self.dimensions + j] = None
             self.empty = (i+1) * self.dimensions + j
+            return True
 
     def down_move(self):
         i = self.empty // self.dimensions
@@ -110,6 +111,7 @@ class Puzzle():
             self.puzzle[self.empty] = self.puzzle[(i-1)* self.dimensions + j]
             self.puzzle[(i-1) * self.dimensions + j] = None
             self.empty = (i-1) * self.dimensions + j
+            return True
 
     def left_move(self):
         i = self.empty // self.dimensions
@@ -118,6 +120,7 @@ class Puzzle():
             self.puzzle[self.empty] = self.puzzle[i * self.dimensions + j+1]
             self.puzzle[i * self.dimensions + j+1] = None
             self.empty = i * self.dimensions + j+1
+            return True
 
     def right_move(self):
         i = self.empty // self.dimensions
@@ -126,6 +129,7 @@ class Puzzle():
             self.puzzle[self.empty] = self.puzzle[i * self.dimensions + j-1]
             self.puzzle[i * self.dimensions +  j-1] = None
             self.empty = i * self.dimensions + j-1
+            return True
 
 #class for Pattern Database
 #self.disjoint patterns is a list of lists whose union is all the pieces of the puzzle
@@ -315,13 +319,46 @@ class State_Search():
         return False
 
     #IDA* search to find solution state
-    def IDA_star_search(self):
-        depth = 0
+    def IDA_star_search(self, node, cost, path, max_cost):
+        if node.check_solved() == True:
+            self.solve_state = path
+            return True
+        
+        if (cost + self.disjoint_pattern(node)) > max_cost:
+            return False
+
+        if node.up_move():
+            if self.IDA_star_search(node, cost + 1, path + 'u', max_cost) == True:
+                return True
+            node.down_move()
+
+        if node.down_move():
+            if self.IDA_star_search(node, cost + 1, path + 'd', max_cost) == True:
+                return True
+            node.up_move()
+
+        if node.left_move():
+            if self.IDA_star_search(node, cost + 1, path + 'l', max_cost) == True:
+                return True
+            node.right_move()
+
+        if node.right_move():
+            if self.IDA_star_search(node, cost + 1, path + 'r', max_cost) == True:
+                return True
+            node.left_move()
+
+        return False
+        
+    def IDA_star(self):
+        max_cost = 0
         found_solution = False
-        while(not found_solution):
-            print('Depth level: ', depth)
-            found_solution = self.A_star_search(depth)
-            depth += 1
+        while not found_solution:
+            print('Depth level: ', max_cost)
+            found_solution = self.IDA_star_search(self.puzzle, 0, '', max_cost)
+            max_cost += 1
+        return True
+
+
 
             
 
@@ -330,12 +367,14 @@ class State_Search():
 def main():
     puzzle = Puzzle(4)
     puzzle.create_random_puzzle()
+    #puzzle.load_puzzle('80-puzzle.txt')
+    #puzzle.load_puzzle('4x4.stp')
     print(puzzle.puzzle)
 
     #May have to use without file if you don't have the database file saved
     search = State_Search(puzzle, [[[0,1,2,3,4], [5,8,9,12,13], [6,7,10,11,14]],
      [[0,1,2,3], [4,5,6,7], [8,9,10,11],[12,13,14]]], ['5-5-5.txt', '4-4-3-pattern.txt'])
-    search.IDA_star_search()
+    search.IDA_star()
     print(search.solve_state, len(search.solve_state))
 if __name__ == '__main__':
     main()
