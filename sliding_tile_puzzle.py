@@ -2,6 +2,7 @@ import random
 import queue
 import copy
 import math
+import sys
 #This class contains a sliding tile puzzle
 #self.dimensions is the width and height of the puzzle
 #self.empty is the blank square
@@ -243,18 +244,19 @@ class State_Search():
         self.puzzle = puzzle
         self.solve_state = None
         if files == None:
-            self.database = Pattern_Database(puzzle, patterns)
+            self.databases = [Pattern_Database(puzzle, patterns)]
             for index in range(len(patterns)):
                 print('Loading pattern for ', patterns[index])
-                self.database.load_pattern(index)
+                self.databases[0].load_pattern(index)
             print('Finished loading patterns')
         else:
             self.databases = [None] * len(files)
             for index in range(len(files)):
                 self.databases[index] = Pattern_Database(puzzle, patterns[index])
-            print('Loading Pattern Database')
+            print('Loading Databases')
             for index in range(len(files)):
                 self.databases[index].load_patterns_from_file(files[index])
+            print('Finsihed Loading')
 
     #Returns neighbors of state, also gives information to which move was made to reach neighbor
     @staticmethod
@@ -365,15 +367,22 @@ class State_Search():
 
 
 def main():
-    puzzle = Puzzle(4)
+    num_dimensions = int(sys.argv[1])
+    if num_dimensions > 4 or num_dimensions < 2:
+        print('Only 3, 8, or 15 puzzle are available')
+        return
+    puzzle = Puzzle(num_dimensions)
     puzzle.create_random_puzzle()
-    #puzzle.load_puzzle('80-puzzle.txt')
-    #puzzle.load_puzzle('4x4.stp')
-    print(puzzle.puzzle)
+    search = None
 
     #May have to use without file if you don't have the database file saved
-    search = State_Search(puzzle, [[[0,1,2,3,4], [5,8,9,12,13], [6,7,10,11,14]],
-     [[0,1,2,3], [4,5,6,7], [8,9,10,11],[12,13,14]]], ['5-5-5.txt', '4-4-3-pattern.txt'])
+    if num_dimensions == 2:
+        search = State_Search(puzzle, [[[0,1,2]]], ['3-pattern.txt'])
+    elif num_dimensions == 3:
+        search = State_Search(puzzle, [[[0,1,2,3,6], [4,5,7]]], ['5-3-pattern.txt'])
+    else:
+        search = State_Search(puzzle, [[[0,1,2,3,4], [5,8,9,12,13], [6,7,10,11,14]],
+        [[0,1,2,3], [4,5,6,7], [8,9,10,11],[12,13,14]]], ['5-5-5.txt', '4-4-3-pattern.txt'])
     search.IDA_star()
     print(search.solve_state, len(search.solve_state))
 if __name__ == '__main__':
