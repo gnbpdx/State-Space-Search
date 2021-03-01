@@ -235,18 +235,22 @@ class Pattern_Database():
 #class for State Space Search
 #When done self.solve_state contains a string of the moves to bring the puzzle to the goal state 
 class State_Search():
-    def __init__(self, puzzle, patterns, file=None):
+    def __init__(self, puzzle, patterns, files=None):
         self.puzzle = puzzle
         self.solve_state = None
-        if file == None:
+        if files == None:
             self.database = Pattern_Database(puzzle, patterns)
             for index in range(len(patterns)):
                 print('Loading pattern for ', patterns[index])
                 self.database.load_pattern(index)
             print('Finished loading patterns')
         else:
-            self.database = Pattern_Database(puzzle, patterns)
-            self.database.load_patterns_from_file(file)
+            self.databases = [None] * len(files)
+            for index in range(len(files)):
+                self.databases[index] = Pattern_Database(puzzle, patterns[index])
+            print('Loading Pattern Database')
+            for index in range(len(files)):
+                self.databases[index].load_patterns_from_file(files[index])
 
     #Returns neighbors of state, also gives information to which move was made to reach neighbor
     @staticmethod
@@ -283,16 +287,14 @@ class State_Search():
 
     #Heuristic for summing up number of moves needed to take for each pattern
     def disjoint_pattern(self, state):
-        pattern_sum = 0
-        for pattern_number in range(len(self.database.disjoint_patterns)):
-            database_index = self.database.index_into_database(state, pattern_number)
-            pattern_sum += self.database.database[pattern_number][database_index]
-        return pattern_sum
+        return max([
+            sum([database.database[pattern_number][database.index_into_database(state, pattern_number)] 
+            for pattern_number in range(len(database.disjoint_patterns))])
+            for database in self.databases])
 
     #A* search to find solution state (bound is only used when called by IDA*)
     def A_star_search(self, bound = math.inf):
         stop_list = set()
-
         priority_queue = queue.PriorityQueue()
         priority_queue.put((self.disjoint_pattern(self.puzzle), (self.puzzle, 0, '')))
         while not priority_queue.empty():
@@ -327,11 +329,12 @@ class State_Search():
 
 def main():
     puzzle = Puzzle(4)
-    puzzle.load_puzzle('4x4.stp')
+    puzzle.create_random_puzzle()
     print(puzzle.puzzle)
 
     #May have to use without file if you don't have the database file saved
-    search = State_Search(puzzle, [[0,1,2,3,4], [5,8,9,12,13], [6,7,10,11,14]], '5-5-5.txt')
+    search = State_Search(puzzle, [[[0,1,2,3,4], [5,8,9,12,13], [6,7,10,11,14]],
+     [[0,1,2,3], [4,5,6,7], [8,9,10,11],[12,13,14]]], ['5-5-5.txt', '4-4-3-pattern.txt'])
     search.IDA_star_search()
     print(search.solve_state, len(search.solve_state))
 if __name__ == '__main__':
