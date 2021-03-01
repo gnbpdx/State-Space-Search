@@ -105,6 +105,7 @@ class Puzzle():
             self.puzzle[(i+1) * self.dimensions + j] = None
             self.empty = (i+1) * self.dimensions + j
             return True
+        return False
 
     def down_move(self):
         i = self.empty // self.dimensions
@@ -114,6 +115,7 @@ class Puzzle():
             self.puzzle[(i-1) * self.dimensions + j] = None
             self.empty = (i-1) * self.dimensions + j
             return True
+        return False
 
     def left_move(self):
         i = self.empty // self.dimensions
@@ -123,6 +125,7 @@ class Puzzle():
             self.puzzle[i * self.dimensions + j+1] = None
             self.empty = i * self.dimensions + j+1
             return True
+        return False
 
     def right_move(self):
         i = self.empty // self.dimensions
@@ -132,6 +135,7 @@ class Puzzle():
             self.puzzle[i * self.dimensions +  j-1] = None
             self.empty = i * self.dimensions + j-1
             return True
+        return False
 
     def print_puzzle(self):
         for index in range(len(self.puzzle)):
