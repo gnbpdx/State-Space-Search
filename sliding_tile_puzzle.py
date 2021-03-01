@@ -220,13 +220,13 @@ class Pattern_Database():
         stop_list = set()
         while not priority_queue.empty():
             cost, state = priority_queue.get()
+            if state in stop_list:
+                continue
             database_index = self.index_into_database(state, pattern_number)
-            if cost < self.database[pattern_number][database_index]:
-                self.database[pattern_number][database_index] = cost
+            self.database[pattern_number][database_index] = cost
 
             for neighbor, additional_cost in self.neighbors(state, pattern):
-                neighbor_database_index = self.index_into_database(neighbor, pattern_number)
-                if (cost + additional_cost) < self.database[pattern_number][neighbor_database_index]:
+                if not neighbor in stop_list:
                     priority_queue.put((cost + additional_cost, neighbor))
 
             stop_list.add(state)
@@ -327,11 +327,11 @@ class State_Search():
 
 def main():
     puzzle = Puzzle(4)
-    puzzle.create_random_puzzle()
+    puzzle.load_puzzle('4x4.stp')
     print(puzzle.puzzle)
 
     #May have to use without file if you don't have the database file saved
-    search = State_Search(puzzle, [[0,1,2,3], [4,5,6,7], [8,9,10,11], [12,13,14]], '4-4-3-pattern.txt')
+    search = State_Search(puzzle, [[0,1,2,3,4], [5,8,9,12,13], [6,7,10,11,14]], '5-5-5.txt')
     search.IDA_star_search()
     print(search.solve_state, len(search.solve_state))
 if __name__ == '__main__':
