@@ -3,6 +3,7 @@ import queue
 import copy
 import math
 import sys
+import timeit
 #This class contains a sliding tile puzzle
 #self.dimensions is the width and height of the puzzle
 #self.empty is the blank square
@@ -132,6 +133,20 @@ class Puzzle():
             self.empty = i * self.dimensions + j-1
             return True
 
+    def print_puzzle(self):
+        for index in range(len(self.puzzle)):
+            if index % self.dimensions == 0:
+                print()
+            if self.puzzle[index] != None:
+                print(self.puzzle[index], end=' ')
+            else:
+                print('   ', end='')
+                continue
+            if self.puzzle[index] < 10:
+                print(' ',end='')
+        print()
+            
+
 #class for Pattern Database
 #self.disjoint patterns is a list of lists whose union is all the pieces of the puzzle
 #self.database is the pattern database
@@ -256,7 +271,7 @@ class State_Search():
             print('Loading Databases')
             for index in range(len(files)):
                 self.databases[index].load_patterns_from_file(files[index])
-            print('Finsihed Loading')
+            print('Finished Loading')
 
     #Returns neighbors of state, also gives information to which move was made to reach neighbor
     @staticmethod
@@ -373,6 +388,7 @@ def main():
         return
     puzzle = Puzzle(num_dimensions)
     puzzle.create_random_puzzle()
+    puzzle.print_puzzle()
     search = None
 
     #May have to use without file if you don't have the database file saved
@@ -383,7 +399,10 @@ def main():
     else:
         search = State_Search(puzzle, [[[0,1,2,3,4], [5,8,9,12,13], [6,7,10,11,14]],
         [[0,1,2,3], [4,5,6,7], [8,9,10,11],[12,13,14]]], ['5-5-5.txt', '4-4-3-pattern.txt'])
-    search.IDA_star()
+    start_time = timeit.default_timer()
+    search.A_star_search()
+    end_time = timeit.default_timer()
     print(search.solve_state, len(search.solve_state))
+    print('Elapsed time: ', end_time - start_time)
 if __name__ == '__main__':
     main()
