@@ -297,6 +297,8 @@ class State_Search():
         priority_queue.put((self.disjoint_pattern(self.puzzle), (self.puzzle, 0, '')))
         while not priority_queue.empty():
             (_, (node, distance, path)) = priority_queue.get()
+            if node in stop_list:
+                continue
             if (node.check_solved()):
                 self.solve_state = path
                 return True
@@ -304,7 +306,6 @@ class State_Search():
             for neighbor, direction in self.neighbors(node):
                 if not neighbor in stop_list:
                     astar_distance = distance + self.disjoint_pattern(neighbor) + 1
-                    assert(astar_distance != math.inf)
                     if astar_distance <= bound:
                         priority_queue.put((astar_distance, (neighbor, distance + 1, path + direction)))
             stop_list.add(node)
