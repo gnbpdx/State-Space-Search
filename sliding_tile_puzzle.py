@@ -1,3 +1,4 @@
+#Pattern Databases from https://webdocs.cs.ualberta.ca/~jonathan/publications/ai_publications/compi.pdf paper
 import random
 import queue
 import copy
@@ -256,6 +257,7 @@ class Pattern_Database():
             stop_list.add(state)
 
 
+
 #class for State Space Search
 #When done self.solve_state contains a string of the moves to bring the puzzle to the goal state 
 class State_Search():
@@ -317,7 +319,7 @@ class State_Search():
             for pattern_number in range(len(database.disjoint_patterns))])
             for database in self.databases])
 
-    #A* search to find solution state (bound is only used when called by IDA*)
+    #A* search to find solution state
     def A_star_search(self, bound = math.inf):
         stop_list = set()
         priority_queue = queue.PriorityQueue()
